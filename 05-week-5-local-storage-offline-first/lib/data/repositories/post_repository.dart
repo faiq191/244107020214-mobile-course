@@ -4,6 +4,8 @@ import '../local/db.dart';
 import '../local/post.dart';
 import 'note_repository.dart';
 
+import 'package:flutter/foundation.dart';
+
 class PostRepository {
   final Dio _dio = Dio();
 
@@ -43,7 +45,7 @@ class PostRepository {
       }
     } catch (e) {
       // Jika offline/gagal koneksi, silent catch agar tidak merusak UI yang sudah menampilkan cache
-      print('Background refresh skipped: offline/network error');
+      debugPrint('Background refresh skipped: offline/network error');
     }
   }
 

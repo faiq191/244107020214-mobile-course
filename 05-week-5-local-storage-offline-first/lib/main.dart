@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-
-import 'data/local/note.dart';
-import 'data/repositories/note_repository.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:week5_offline_notes/data/local/note.dart';
+import 'package:week5_offline_notes/data/repositories/note_repository.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -14,92 +13,126 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Offline Notes',
+      title: 'Offline First Notes',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const OfflineNotesPage(),
+      home: const HomePage(),
     );
   }
 }
 
-class OfflineNotesPage extends StatefulWidget {
-  const OfflineNotesPage({super.key});
+class HomePage extends ConsumerWidget {
+  const HomePage({super.key});
 
   @override
-  State<OfflineNotesPage> createState() => _OfflineNotesPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notesAsync = ref.watch(notesProvider);
 
-class _OfflineNotesPageState extends State<OfflineNotesPage> {
-  final NoteRepository _repository = NoteRepository();
-  List<Note> _notes = [];
-  int _dirtyCount = 0;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadNotes();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Offline First Notes'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.sync),
+            onPressed: () async {
+              await ref.read(noteRepositoryProvider).markAllSynced();
+              ref.invalidate(notesProvider);
+            },
+          ),
+        ],
+      ),
+      body: notesAsync.when(
+        data: (notes) {
+          if (notes.isEmpty) {
+            return const Center(child: Text('Belum ada catatan.'));
+          }
+          return ListView.builder(
+            itemCount: notes.length,
+            itemBuilder: (context, index) {
+              final note = notes[index];
+              return ListTile(
+                title: Text(note.title),
+                subtitle: Text(note.body),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (note.dirty)
+                      const Icon(Icons.cloud_off, color: Colors.orange),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () async {
+                        if (note.id != null) {
+                          await ref
+                              .read(noteRepositoryProvider)
+                              .deleteNote(note.id!);
+                          ref.invalidate(notesProvider);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error: $err')),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddNoteDialog(context, ref),
+        child: const Icon(Icons.add),
+      ),
+    );
   }
 
-  // Mengambil daftar catatan & jumlah data belum tersinkronisasi (dirty) dari SQLite
-  Future<void> _loadNotes() async {
-    setState(() => _isLoading = true);
-    final notes = await _repository.fetchNotes();
-    final dirtyCount = await _repository.countDirty();
-    setState(() {
-      _notes = notes;
-      _dirtyCount = dirtyCount;
-      _isLoading = false;
-    });
-  }
-
-  // Dialog untuk menambah catatan baru
-  void _showAddNoteDialog() {
+  void _showAddNoteDialog(BuildContext context, WidgetRef ref) {
     final titleController = TextEditingController();
     final bodyController = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Tambah Catatan Baru'),
+          title: const Text('Tambah Catatan'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Judul',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Judul'),
               ),
-              const SizedBox(height: 12),
               TextField(
                 controller: bodyController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Isi Catatan',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Isi'),
               ),
             ],
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Batal'),
             ),
             ElevatedButton(
               onPressed: () async {
-                if (titleController.text.trim().isNotEmpty) {
-                  await _repository.addNote(
-                    title: titleController.text.trim(),
-                    body: bodyController.text.trim(),
+                final title = titleController.text;
+                final body = bodyController.text;
+
+                if (title.isNotEmpty) {
+                  final repository = ref.read(noteRepositoryProvider);
+                  await repository.addNote(
+                    Note(
+                      title: title,
+                      body: body,
+                      updatedAt: DateTime.now(),
+                      dirty: true,
+                    ),
                   );
-                  if (mounted) Navigator.pop(context);
-                  _loadNotes();
+
+                  if (!context.mounted) return;
+                  Navigator.of(dialogContext).pop();
+                  ref.invalidate(notesProvider);
                 }
               },
               child: const Text('Simpan'),
@@ -107,104 +140,6 @@ class _OfflineNotesPageState extends State<OfflineNotesPage> {
           ],
         );
       },
-    );
-  }
-
-  // Menghapus catatan berdasarkan ID
-  Future<void> _deleteNote(int id) async {
-    await _repository.deleteNote(id);
-    _loadNotes();
-  }
-
-  // Simulasi penandaan sinkronisasi (mark all synced)
-  Future<void> _syncNotes() async {
-    await _repository.markAllSynced();
-    _loadNotes();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Semua catatan berhasil disinkronkan!')),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Offline Notes'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        actions: [
-          // Indicator jumlah data "dirty" (unsynced)[cite: 4]
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Center(
-              child: Badge(
-                label: Text('$_dirtyCount'),
-                child: IconButton(
-                  icon: const Icon(Icons.sync),
-                  tooltip: 'Sync Notes',
-                  onPressed: _syncNotes,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _notes.isEmpty
-          ? const Center(child: Text('Belum ada catatan lokal.'))
-          : ListView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: _notes.length,
-              itemBuilder: (context, index) {
-                final note = _notes[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(
-                      note.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (note.body.isNotEmpty) ...[
-                          Text(note.body),
-                          const SizedBox(height: 4),
-                        ],
-                        Text(
-                          'Diperbarui: ${note.updatedAt.toString().split('.')[0]}',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (note.dirty)
-                          const Icon(
-                            Icons.cloud_off,
-                            color: Colors.orange,
-                            size: 20,
-                          ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteNote(note.id!),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddNoteDialog,
-        tooltip: 'Tambah Catatan',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }
