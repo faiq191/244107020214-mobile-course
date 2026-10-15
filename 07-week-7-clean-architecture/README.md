@@ -2,7 +2,7 @@
 
 This repository refactors the Week 6 app **campus_notify** (secure authentication with 401 auto-refresh + FCM push notifications + announcement list) into **feature-first Clean Architecture** — continuing the same repository, not a new project. No new features were built; this lab only moves and separates code that already exists and already works.
 
-> **Evidence:** Screenshot evidence lives in `screenshots/` with the exact filenames referenced below.
+> **Evidence:** Screenshot evidence lives in `screenshots/` and is embedded directly below — no need to open the folder manually. Capture guide: [docs/SCREENSHOT_GUIDE.md](docs/SCREENSHOT_GUIDE.md).
 
 ## Table of Contents
 
@@ -133,6 +133,8 @@ lib/
 Snapshot commit before refactoring: `git commit -m "chore: snapshot before clean architecture"` — used for the before/after screenshots and rollback comparison.
 
 Evidence (before/after structure): `screenshots/directory.png`.
+
+![Project structure — feature-first folders](screenshots/directory.png)
 
 ---
 
@@ -267,6 +269,12 @@ The announcement feature wires the same way — the repository implementation is
 
 **Login page (before/after pair, identical UI):** `screenshots/login-before.png` / `screenshots/login-after.png` (after-version also saved as `login.png`) — **Invalid credentials handling (sealed `AuthFailure` surfaced as a message):** `screenshots/login-error-after.png`.
 
+| Login — before (Week 6)                       | Login — after (refactored)                  |
+| --------------------------------------------- | ------------------------------------------- |
+| ![Login before](screenshots/login-before.png) | ![Login after](screenshots/login-after.png) |
+
+![Login error — AuthFailure surfaced as a UI message](screenshots/login-error-after.png)
+
 ### 3. Verify the Dependency Rule (Sterility Greps)
 
 All three checks were run and must pass — **actual results**:
@@ -280,6 +288,9 @@ All three checks were run and must pass — **actual results**:
 **Definition of done:** the app behaves exactly as before (5-minute manual test per feature: login, logout, list, detail, push in all three states) ✅ — before/after screenshots (same UI, different structure) in `screenshots/`; all three greps zero ✅; `flutter analyze` clean ✅; tests green ✅.
 
 Evidence: `screenshots/flutteranalyze.png`, `screenshots/fluttertest.png`.
+
+![flutter analyze — no issues found](screenshots/flutteranalyze.png)
+![flutter test — all tests passed](screenshots/fluttertest.png)
 
 ---
 
@@ -450,6 +461,8 @@ Covered cases:
 
 Run: `flutter analyze && flutter test` → **4/4 pass**. Evidence: `screenshots/fluttertest.png`.
 
+![flutter test — all tests passed](screenshots/fluttertest.png)
+
 ### Common Errors Encountered & Fixes
 
 | Symptom                                                                     | Common cause                                                                        | Fix applied in this repo                                                                                                  |
@@ -470,7 +483,17 @@ Behavior is unchanged and was manually re-tested in all three states; visual FCM
 | **Background** | System banner, tap → correct route             | `screenshots/background.png` |
 | **Terminated** | `getInitialMessage()` opens the right route    | `screenshots/terminated.png` |
 
-Supporting evidence: `screenshots/login-error-after.png` (invalid-credentials message), `screenshots/announcement-detail-before.png` / `screenshots/announcement-detail-after.png` (alias `announcement-detail.png`). FCM evidence (`foreground.png`, `background.png`, `terminated.png`, `token-debug.png` truncated, `fcm-console-test.png`) is **optional** — not required by the Week 7 rubric (see [docs/SCREENSHOT_GUIDE.md](docs/SCREENSHOT_GUIDE.md)); FCM & secure storage correctness is instead proven by `flutter analyze` (0 issues), identical app behavior, and the 0-hit sterility greps.
+Supporting evidence: `screenshots/login-error-after.png` (invalid-credentials message), `screenshots/announcement-detail-before.png` / `screenshots/announcement-detail-after.png` (alias `announcement-detail.png`).
+
+| Announcement list — before (Week 6)                                   | Announcement list — after (refactored)                              |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| ![Announcement list before](screenshots/announcement-list-before.png) | ![Announcement list after](screenshots/announcement-list-after.png) |
+
+| Announcement detail — before (Week 6)                                     | Announcement detail — after (refactored)                                |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| ![Announcement detail before](screenshots/announcement-detail-before.png) | ![Announcement detail after](screenshots/announcement-detail-after.png) |
+
+FCM evidence (`foreground.png`, `background.png`, `terminated.png`, `token-debug.png` truncated, `fcm-console-test.png`) is **optional** — not required by the Week 7 rubric (see [docs/SCREENSHOT_GUIDE.md](docs/SCREENSHOT_GUIDE.md)); FCM & secure storage correctness is instead proven by `flutter analyze` (0 issues), identical app behavior, and the 0-hit sterility greps.
 
 ---
 
