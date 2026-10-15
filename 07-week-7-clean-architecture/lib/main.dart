@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'messaging/push_service.dart';
-import 'pages/announcement_page.dart';
-import 'pages/home_page.dart';
-import 'pages/login_page.dart';
-import 'providers/auth_provider.dart';
-import 'pages/token_debug_page.dart';
+import 'core/messaging/push_service.dart';
+import 'features/announcement/presentation/pages/announcement_detail_page.dart';
+import 'features/announcement/presentation/pages/home_page.dart';
+import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/presentation/providers/auth_providers.dart';
+import 'features/messaging/presentation/pages/token_debug_page.dart';
 import 'routes.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -31,11 +31,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: Routes.login, builder: (_, _) => const LoginPage()),
-    GoRoute(path: Routes.tokenDebug, builder: (_, _) => const TokenDebugPage()),
+      GoRoute(
+        path: Routes.tokenDebug,
+        builder: (_, _) => const TokenDebugPage(),
+      ),
       GoRoute(path: Routes.home, builder: (_, _) => const HomePage()),
       GoRoute(
         path: '${Routes.announcementBase}/:id',
-        builder: (_, s) => AnnouncementPage(id: s.pathParameters['id'] ?? ''),
+        builder: (_, s) =>
+            AnnouncementDetailPage(id: s.pathParameters['id'] ?? ''),
       ),
     ],
   );
@@ -101,6 +105,9 @@ Future<void> main() async {
 
   // Riverpod 3: a pre-built container must be passed via UncontrolledProviderScope.
   runApp(
-    UncontrolledProviderScope(container: container, child: const CampusNotifyApp()),
+    UncontrolledProviderScope(
+      container: container,
+      child: const CampusNotifyApp(),
+    ),
   );
 }

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:campus_notify/features/auth/presentation/pages/login_page.dart';
+import 'package:campus_notify/features/auth/presentation/providers/auth_providers.dart';
 import 'package:campus_notify/main.dart';
-import 'package:campus_notify/pages/login_page.dart';
-import 'package:campus_notify/providers/auth_provider.dart';
 
 class _LoggedOutAuth extends AuthNotifier {
   @override
