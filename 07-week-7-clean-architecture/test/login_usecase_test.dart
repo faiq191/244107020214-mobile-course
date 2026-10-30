@@ -12,8 +12,10 @@ class FakeAuthRepository implements AuthRepository {
   final bool fail;
 
   @override
-  Future<AuthSession> login(
-      {required String email, required String password}) async {
+  Future<AuthSession> login({
+    required String email,
+    required String password,
+  }) async {
     if (fail) throw Exception('network down (simulated)');
     return const AuthSession(access: 'access-token', refresh: 'refresh-token');
   }
@@ -32,14 +34,16 @@ void main() {
     expect(result.session!.isValid, isTrue);
   });
 
-  test('Login returns AuthFailure instead of throwing on invalid email',
-      () async {
-    final result = await Login(FakeAuthRepository())
-        .call(email: 'not-an-email', password: 'secret123');
+  test(
+    'Login returns AuthFailure instead of throwing on invalid email',
+    () async {
+      final result = await Login(FakeAuthRepository())
+          .call(email: 'not-an-email', password: 'secret123');
 
-    expect(result.failure, isA<AuthFailure>());
-    expect(result.session, isNull);
-  });
+      expect(result.failure, isA<AuthFailure>());
+      expect(result.session, isNull);
+    },
+  );
 
   test('Login converts repository exceptions into AuthFailure', () async {
     final result = await Login(FakeAuthRepository(fail: true))

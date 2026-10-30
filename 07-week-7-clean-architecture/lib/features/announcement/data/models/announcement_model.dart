@@ -10,26 +10,36 @@ class AnnouncementModel extends Announcement {
     super.body,
   });
 
+  /// Throws [ArgumentError] when the title is missing or blank so a broken
+  /// backend row fails loudly at the boundary instead of rendering an empty
+  /// list tile; the repository catch converts it into a core Failure.
   factory AnnouncementModel.fromMap(Map<String, Object?> map) {
+    // A missing or non-String title (bad backend row) counts as blank so it
+    // always fails through ArgumentError, never as a raw cast TypeError.
+    final rawTitle = map['title'];
+    final title = rawTitle is String ? rawTitle.trim() : '';
+    if (title.isEmpty) {
+      throw ArgumentError.value(
+        map['title'],
+        'title',
+        'Announcement title must not be blank (id: ${map['id'] ?? '?'})',
+      );
+    }
     return AnnouncementModel(
       id: map['id'] as String? ?? '?',
-      title: map['title'] as String? ?? '',
+      title: title,
       preview: map['preview'] as String? ?? '',
       body: map['body'] as String? ?? '',
     );
   }
 
   Map<String, Object?> toMap() => {
-        'id': id,
-        'title': title,
-        'preview': preview,
-        'body': body,
-      };
+    'id': id,
+    'title': title,
+    'preview': preview,
+    'body': body,
+  };
 
-  Announcement toEntity() => Announcement(
-        id: id,
-        title: title,
-        preview: preview,
-        body: body,
-      );
+  Announcement toEntity() =>
+      Announcement(id: id, title: title, preview: preview, body: body);
 }

@@ -7,8 +7,10 @@ import '../../domain/repositories/auth_repository.dart';
 /// the domain interface and every consumer stay untouched.
 class AuthRepositoryImpl implements AuthRepository {
   @override
-  Future<AuthSession> login(
-      {required String email, required String password}) async {
+  Future<AuthSession> login({
+    required String email,
+    required String password,
+  }) async {
     await Future.delayed(const Duration(milliseconds: 500));
     if (!email.contains('@') || password.length < 6) {
       throw Exception('Invalid email or password');

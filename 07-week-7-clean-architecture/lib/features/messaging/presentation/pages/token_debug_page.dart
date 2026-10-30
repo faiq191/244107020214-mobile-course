@@ -25,14 +25,14 @@ class TokenDebugPage extends ConsumerWidget {
             children: [
               const Icon(Icons.key, size: 48),
               const SizedBox(height: 16),
-              Text('FCM token (masked)',
-                  style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'FCM token (masked)',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               SelectableText(
                 token == null ? '(belum ada token)' : maskToken(token),
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineSmall
+                style: Theme.of(context).textTheme.headlineSmall
                     ?.copyWith(fontFamily: 'monospace'),
               ),
               const SizedBox(height: 16),

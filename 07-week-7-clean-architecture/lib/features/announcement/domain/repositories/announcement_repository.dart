@@ -7,5 +7,5 @@ abstract class AnnouncementRepository {
   /// Success/failure paired in a record — no exception leaks into
   /// presentation (same pattern as the auth feature).
   Future<({List<Announcement> announcements, Failure? failure})>
-      fetchAnnouncements();
+  fetchAnnouncements();
 }
