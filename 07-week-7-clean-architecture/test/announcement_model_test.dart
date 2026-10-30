@@ -57,5 +57,19 @@ void main() {
         throwsArgumentError,
       );
     });
+
+    test(
+      'throws ArgumentError, not TypeError, when the title is not a String',
+      () {
+        expect(
+          () => AnnouncementModel.fromMap(const {
+            'id': '6',
+            'title': 42,
+            'preview': 'Numeric title.',
+          }),
+          throwsArgumentError,
+        );
+      },
+    );
   });
 }

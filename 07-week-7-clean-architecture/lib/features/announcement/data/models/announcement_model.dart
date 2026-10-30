@@ -14,7 +14,10 @@ class AnnouncementModel extends Announcement {
   /// backend row fails loudly at the boundary instead of rendering an empty
   /// list tile; the repository catch converts it into a core Failure.
   factory AnnouncementModel.fromMap(Map<String, Object?> map) {
-    final title = (map['title'] as String?)?.trim() ?? '';
+    // A missing or non-String title (bad backend row) counts as blank so it
+    // always fails through ArgumentError, never as a raw cast TypeError.
+    final rawTitle = map['title'];
+    final title = rawTitle is String ? rawTitle.trim() : '';
     if (title.isEmpty) {
       throw ArgumentError.value(
         map['title'],
