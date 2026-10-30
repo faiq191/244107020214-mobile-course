@@ -109,7 +109,8 @@ class PushService {
     );
     // flutter_local_notifications 22.x made every parameter named.
     await _local.show(
-      id: message.messageId?.hashCode ??
+      id:
+          message.messageId?.hashCode ??
           DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title: notification?.title ?? 'Campus announcement',
       body: notification?.body ?? '',

@@ -37,9 +37,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (next.hasError) {
         // Only a friendly message crosses the boundary — never a raw
         // exception or stack trace (Failure, Refactoring Challenge).
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: ${next.error}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Login failed: ${next.error}')));
       }
     });
 
